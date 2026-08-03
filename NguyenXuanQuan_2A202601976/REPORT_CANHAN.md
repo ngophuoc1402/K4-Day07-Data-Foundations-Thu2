@@ -165,22 +165,22 @@ tests/test_solution.py::TestEmbeddingStoreDeleteDocument::test_delete_returns_tr
 ## 5. Kết quả truy xuất của tôi (Competition Results) — Cá nhân (10 điểm)
 
 **Chiến lược cá nhân:** `SentenceChunker(max_sentences_per_chunk=3)` — chia theo ranh giới câu, nhóm 3 câu/chunk.  
-**Bộ dữ liệu chung:** 5 tài liệu chính sách Shopee chính thức trong `data/k4_ecommerce/` → **59 chunks**.
+**Bộ dữ liệu chung:** đúng 5 tài liệu chính sách Shopee trong `data/k4_ecommerce/`; dữ liệu starter nằm riêng ở `data/starter_examples/` → **49 chunks**.
 **Embedder benchmark:** Lexical hashing có chuẩn hóa tiếng Việt (word, bigram, character 4-gram), dùng để so sánh offline ổn định hơn mock ngẫu nhiên.
 **Lọc metadata:** Q5 dùng `search_with_filter(metadata_filter={"customer_role": "seller"})` theo yêu cầu lớp K4.
 
 | # | Câu hỏi (Query) | Top-1 Chunk truy xuất được (tóm tắt) | Điểm Score | Có liên quan không? | Câu trả lời của Agent (tóm tắt) |
 |---|-------|--------------------------------|-------|-----------|--------------------------|
-| 1 | Người mua có thể yêu cầu trả hàng/hoàn tiền trong trường hợp nào? | Mục “Các trường hợp Người Mua có thể yêu cầu...” | 0.7049 | Có, top-1 | Nêu các trường hợp không nhận hàng, hàng lỗi/sai/khác mô tả, hết hạn và Trả hàng COM. |
-| 2 | Thời hạn gửi yêu cầu trả hàng/hoàn tiền là bao lâu? | Chunk chứa 15 ngày và 24 giờ | 0.5003 | Có, top-2 | Thông thường 15 ngày; thực phẩm tươi sống/đông lạnh là 24 giờ. |
+| 1 | Người mua có thể yêu cầu trả hàng/hoàn tiền trong trường hợp nào? | Mục “Các trường hợp Người Mua có thể yêu cầu...” đứng top-1 nhưng hợp top-3 chỉ phủ một phần danh sách | 0.7049 | Có, phủ 3/8 ý | Context chưa đủ để nêu đầy đủ mọi trường hợp trong gold answer. |
+| 2 | Thời hạn gửi yêu cầu trả hàng/hoàn tiền là bao lâu? | Top-1 chứa 15 ngày nhưng top-3 thiếu ngoại lệ 24 giờ | 0.5003 | Có, phủ 1/2 ý | Context chưa đủ để trả lời ngoại lệ thực phẩm tươi sống/đông lạnh. |
 | 3 | Đơn COD/chuyển khoản cần điều kiện gì để nhận hoàn tiền? | Mục điều kiện nhận hoàn tiền COD | 0.6033 | Có, top-1 | Phải liên kết tài khoản ngân hàng hoặc ví hợp lệ như ShopeePay. |
 | 4 | Làm gì khi bao bì bị rách, móp méo, vỡ hoặc ướt? | Câu khuyến cáo kiểm tra bao bì | 0.4965 | Có, top-1 | Người mua nên từ chối nhận hàng. |
-| 5 | Quy định đăng bán yêu cầu thông tin sản phẩm thế nào? | Mục yêu cầu tiêu đề, hình ảnh, giá và mô tả | 0.3860 | Có, top-3 | Thông tin phải thống nhất, chính xác và không gây nhầm lẫn. |
+| 5 | Quy định đăng bán yêu cầu thông tin sản phẩm thế nào? | Các chunk liên quan đứng top-1/top-3 nhưng hợp bằng chứng chỉ phủ một phần yêu cầu | 0.4868 | Có, phủ 3/6 ý | Context chưa đủ để khẳng định toàn bộ gold answer. |
 
-**Bao nhiêu câu hỏi trả về chunk có liên quan trong top-3:** 5 / 5. **Điểm theo rubric:** 8 / 10.
+**Bao nhiêu câu hỏi trả về chunk có liên quan trong top-3:** 5 / 5. **Điểm retrieval/evidence coverage:** 7 / 10.
 
 **Phân tích kết quả:**
-> `SentenceChunker(max_sentences_per_chunk=3)` cho kết quả tốt với văn bản chính sách: Q1, Q3 và Q4 có căn cứ ở top-1. Q2 bị heading/ghi chú ngắn đứng trên chunk có đáp án; Q5 đã lọc đúng hai tài liệu seller nhưng phần phạm vi áp dụng vẫn đứng cao hơn phần yêu cầu thông tin. Có thể cải thiện bằng chunking theo heading và loại phần ghi chú benchmark trước khi ingest.
+> `SentenceChunker(max_sentences_per_chunk=3)` giữ trọn căn cứ cho Q3 và Q4. Với các câu cần tổng hợp danh sách hoặc nhiều ngoại lệ, top-3 chỉ phủ 3/8 ý ở Q1, 1/2 ý ở Q2 và 3/6 ý ở Q5. Có thể cải thiện bằng chunking theo heading hoặc tăng số câu mỗi chunk.
 
 **Điều hay nhất học được từ thực nghiệm này:**
 > Metadata `customer_role`, `category` và `source_url` giúp vừa lọc đúng phạm vi buyer/seller vừa truy vết nguồn. Q5 cho thấy filter cấp tài liệu giảm nhiễu, nhưng vẫn cần chunking tốt để đưa đúng section lên top-1.
@@ -195,5 +195,5 @@ tests/test_solution.py::TestEmbeddingStoreDeleteDocument::test_delete_returns_tr
 | Hướng tiếp cận của tôi (My Approach) | 10 / 10 |
 | Hoàn thiện code (Core Implementation — tests) | 30 / 30 |
 | Dự đoán độ tương tự (Similarity Predictions) | 5 / 5 |
-| Kết quả truy xuất của tôi (Competition Results) | 8 / 10 |
-| **Tổng phần cá nhân** | **58 / 60** |
+| Kết quả truy xuất của tôi (Competition Results) | 7 / 10 |
+| **Tổng phần cá nhân** | **57 / 60** |

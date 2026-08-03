@@ -6,7 +6,7 @@ category: returns
 language: vi
 source_url: https://help.shopee.vn/portal/4/article/77251
 retrieved_at: 2026-08-03
-document_version: help-center-2026-08-03
+document_version: not-stated
 ---
 
 # Chính sách trả hàng và hoàn tiền
@@ -72,13 +72,3 @@ Người Mua cần:
 2. Gửi trả đầy đủ phụ kiện đi kèm, hóa đơn VAT, tem hoặc phiếu bảo hành nếu có.
 3. Giữ sản phẩm ở trạng thái nguyên vẹn như khi nhận hàng.
 4. Quay video hoặc chụp ảnh sản phẩm ngay khi nhận được và trong lúc đóng gói để làm bằng chứng đối chiếu hoặc khiếu nại về sau.
-
-## Ghi chú sử dụng cho benchmark
-
-Tài liệu này phù hợp cho các câu hỏi benchmark về:
-
-1. Điều kiện được yêu cầu trả hàng/hoàn tiền.
-2. Thời hạn gửi yêu cầu.
-3. Điều kiện hoàn tiền cho đơn COD.
-4. Trách nhiệm phản hồi của Người Bán.
-5. Bằng chứng và yêu cầu đóng gói khi hoàn trả hàng.

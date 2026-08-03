@@ -1,7 +1,7 @@
 ---
 doc_id: k4-seller-listing
 title: Quy định đăng bán
-customer_role: seller       # buyer | seller | both
+customer_role: seller
 category: listing
 language: vi
 source_url: https://example.com/nguoi-ban/dang-ban
@@ -9,7 +9,7 @@ retrieved_at: 2026-08-02
 document_version: "2026.1"
 ---
 
-> Khối metadata phía trên là **template mẫu** cho K4 — thay `source_url`/`retrieved_at`/`document_version` bằng nguồn công khai thật trước khi dùng làm benchmark.
+> Đây là dữ liệu khởi động minh họa, không thuộc corpus benchmark của nhóm.
 
 # Đăng bán sản phẩm (dữ liệu khởi động)
 

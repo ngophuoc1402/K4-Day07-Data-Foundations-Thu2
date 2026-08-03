@@ -1,7 +1,7 @@
 ---
 doc_id: k4-returns-policy
 title: Chính sách đổi trả
-customer_role: buyer        # buyer | seller | both
+customer_role: buyer
 category: returns
 language: vi
 source_url: https://example.com/chinh-sach/doi-tra
@@ -9,7 +9,7 @@ retrieved_at: 2026-08-02
 document_version: "2026.1"
 ---
 
-> Khối metadata phía trên là **template mẫu** cho K4 (bắt buộc: `customer_role` + `source_url` + `retrieved_at` + `document_version`, cùng ít nhất một trường hữu ích khác như `category`). Thay bằng nguồn công khai thật của nhóm trước khi dùng làm benchmark.
+> Đây là dữ liệu khởi động minh họa, không thuộc corpus benchmark của nhóm.
 
 # Đổi trả hàng (dữ liệu khởi động)
 

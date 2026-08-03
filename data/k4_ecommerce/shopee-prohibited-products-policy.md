@@ -6,7 +6,7 @@ category: prohibited_products
 language: vi
 source_url: https://help.shopee.vn/portal/4/article/77247
 retrieved_at: 2026-08-03
-document_version: help-center-2026-08-03
+document_version: not-stated
 ---
 
 # Chính sách cấm và hạn chế sản phẩm

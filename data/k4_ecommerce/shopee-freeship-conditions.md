@@ -6,7 +6,7 @@ category: shipping_promo
 language: vi
 source_url: https://help.shopee.vn/portal/4/article/79606
 retrieved_at: 2026-08-03
-document_version: help-center-2026-08-03
+document_version: not-stated
 ---
 
 # Điều kiện để sử dụng mã miễn phí vận chuyển
@@ -30,12 +30,3 @@ Mã miễn phí vận chuyển chỉ áp dụng cho đơn hàng mua trên ứng 
 
 1. Điều kiện và điều khoản có thể thay đổi theo chương trình khuyến mãi ở từng thời điểm.
 2. Người dùng có thể xem chi tiết điều kiện của từng mã trong mục Tôi > Kho Voucher.
-
-## Ghi chú sử dụng cho benchmark
-
-Tài liệu này phù hợp cho các câu hỏi benchmark về:
-
-1. Điều kiện áp dụng mã freeship.
-2. Giới hạn số mã trên một đơn hàng.
-3. Trường hợp được cấp lại mã freeship.
-4. Trường hợp không áp dụng mã do shop tự vận chuyển.

@@ -6,7 +6,7 @@ category: shipping
 language: vi
 source_url: https://help.shopee.vn/portal/4/article/77250-CH%C3%8DNH-S%C3%81CH-V%E1%BA%ACN-CHUY%E1%BB%82N-SHOPEE
 retrieved_at: 2026-08-03
-document_version: help-center-2026-08-03
+document_version: not-stated
 ---
 
 # Chính sách vận chuyển Shopee
@@ -82,13 +82,3 @@ Khi có khiếu nại vận chuyển, Shopee có thể xử lý trong tối đa 
 5. Các bằng chứng khác nếu có.
 
 Người khiếu nại thường phải cung cấp bằng chứng trong vòng 24 giờ kể từ khi gửi yêu cầu khiếu nại hoặc kể từ khi nhận yêu cầu bổ sung từ Shopee.
-
-## Ghi chú sử dụng cho benchmark
-
-Tài liệu này phù hợp cho các câu hỏi benchmark về:
-
-1. Loại hàng không hỗ trợ vận chuyển.
-2. Quy định đóng gói và thông tin trên bao bì.
-3. Trách nhiệm của Người Bán khi giao hàng.
-4. Quyền từ chối nhận hàng của Người Mua khi bao bì hư hại.
-5. Thời hạn và bằng chứng khiếu nại vận chuyển.

@@ -88,7 +88,7 @@ OK
 
 Máy kiểm tra hiện không cài executable `pytest`, vì vậy tôi chạy trực tiếp cùng
 42 test case `unittest` trong `tests/test_solution.py`. Thư mục cá nhân chứa đầy
-đủ package `src` và được import từ chính thư mục `Phuoc_2A202601576`, không dùng
+đủ package `src` và được import từ chính thư mục `NgoMinhPhuoc_2A202601576`, không dùng
 package `src` ở repository root.
 
 ---
@@ -112,7 +112,7 @@ package `src` ở repository root.
 
 **Chiến lược cá nhân:** `RecursiveChunker(chunk_size=700)`.
 
-**Bộ dữ liệu chung:** 5 tài liệu chính sách Shopee trong `data/k4_ecommerce/`, loại hai file starter dùng `example.com` → **24 chunks**.
+**Bộ dữ liệu chung:** đúng 5 tài liệu chính sách Shopee trong `data/k4_ecommerce/`; hai file starter đã chuyển sang `data/starter_examples/` → **23 chunks**.
 
 **Embedder benchmark:** lexical hashing có chuẩn hóa tiếng Việt (word, bigram và character 4-gram). Backend offline này tái lập được và phù hợp để so sánh chiến lược hơn `_mock_embed`, nhưng không được xem là embedding ngữ nghĩa thật.
 
@@ -120,17 +120,17 @@ package `src` ở repository root.
 
 | # | Câu hỏi (Query) | Top-1 Chunk truy xuất được (tóm tắt) | Điểm Score | Có liên quan không? (Relevant) | Câu trả lời của Agent (tóm tắt) |
 |---|-------|--------------------------------|-------|-----------|------------------------|
-| 1 | Người mua có thể yêu cầu trả hàng/hoàn tiền trong những trường hợp nào? | Chunk đúng tài liệu nhưng chỉ chứa phạm vi/điều kiện chung; danh sách trường hợp không xuất hiện trong top-3 | 0.6156 | Không | Không chấm câu trả lời là đúng vì context top-3 thiếu danh sách gold answer. |
-| 2 | Thời hạn gửi yêu cầu trả hàng/hoàn tiền là bao lâu? | Chunk chứa thời hạn 15 ngày và ngoại lệ 24 giờ | 0.4791 | Có, top-1 | Thông thường 15 ngày từ khi giao thành công; thực phẩm tươi sống/đông lạnh là 24 giờ. |
+| 1 | Người mua có thể yêu cầu trả hàng/hoàn tiền trong những trường hợp nào? | Top-1 là phạm vi chung; top-2/top-3 chỉ bổ sung được một phần danh sách | 0.6156 | Có, nhưng chỉ phủ 1/8 ý | Context chưa đủ để trả lời đầy đủ gold answer. |
+| 2 | Thời hạn gửi yêu cầu trả hàng/hoàn tiền là bao lâu? | Top-1 chứa ngoại lệ 24 giờ nhưng top-3 thiếu mốc 15 ngày | 0.4791 | Có, nhưng chỉ phủ 1/2 ý | Context chỉ chứng minh được ngoại lệ 24 giờ, chưa đủ câu trả lời. |
 | 3 | Đơn COD/chuyển khoản cần điều kiện gì để nhận hoàn tiền? | Chunk chứa điều kiện liên kết phương thức nhận hoàn tiền | 0.5568 | Có, top-1 | Phải liên kết tài khoản ngân hàng hoặc ví hợp lệ như ShopeePay. |
 | 4 | Người mua nên làm gì khi bao bì bị rách, móp méo, vỡ hoặc ướt? | Chunk khuyến cáo kiểm tra bao bì và từ chối nhận hàng | 0.3390 | Có, top-1 | Người mua nên kiểm tra bao bì và từ chối nhận hàng nếu có dấu hiệu hư hại. |
-| 5 | Với `customer_role=seller`, quy định đăng bán yêu cầu thông tin sản phẩm thế nào? | Top-1 là phần phạm vi; chunk chứa yêu cầu tiêu đề, hình ảnh, giá và mô tả đứng top-2 | 0.4683 | Có, top-2 | Thông tin phải thống nhất, chính xác, đúng quy định và không gây nhầm lẫn. |
+| 5 | Với `customer_role=seller`, quy định đăng bán yêu cầu thông tin sản phẩm thế nào? | Hợp top-3 chứa đầy đủ yêu cầu về tiêu đề, hình ảnh, giá, mô tả, tính chính xác và không gây nhầm lẫn | 0.4683 | Có, phủ 6/6 ý | Thông tin phải thống nhất, chính xác, đúng quy định và không gây nhầm lẫn. |
 
-**Bao nhiêu câu hỏi trả về chunk có liên quan trong top-3?** 4 / 5.
+**Bao nhiêu câu hỏi trả về chunk có liên quan trong top-3?** 5 / 5; tuy nhiên Q1 và Q2 chưa đủ độ phủ gold answer.
 
-**Điểm theo rubric sau khi kiểm tra câu trả lời dựa trên context:** 7 / 10.
+**Điểm retrieval/evidence coverage:** 8 / 10.
 
-> Recursive chunking giữ tốt các đoạn về thời hạn, COD và vận chuyển, nhưng chunk 700 ký tự làm danh sách dài ở Q1 bị tách khỏi phần có độ trùng từ cao. Q5 cho thấy metadata filter đưa truy xuất vào đúng hai tài liệu seller, nhưng chunk đúng vẫn đứng sau phần phạm vi áp dụng.
+> Recursive chunking giữ tốt các đoạn COD, vận chuyển và thông tin đăng bán, nhưng top-3 chưa gom đủ danh sách dài ở Q1 và hai mốc thời gian ở Q2. Q5 cho thấy metadata filter đưa truy xuất vào đúng hai tài liệu seller và hợp top-3 bao phủ đủ gold answer.
 
 **Điều hay nhất tôi học được từ thành viên khác / nhóm khác (qua demo):**
 > Điều tôi thấy hữu ích nhất là chiến lược dữ liệu và metadata thường ảnh hưởng đến retrieval nhiều không kém bản thân thuật toán chunking. Khi tài liệu có `source_url`, `category`, `language`, `customer_role` hoặc `document_version` rõ ràng, việc lọc và kiểm chứng câu trả lời trở nên dễ hơn nhiều. Tôi cũng học được rằng không nên kết luận chất lượng chiến lược chỉ từ unit test, mà cần benchmark trên bộ tài liệu thật với embedder ngữ nghĩa phù hợp.
@@ -145,5 +145,5 @@ package `src` ở repository root.
 | Hướng tiếp cận của tôi (My Approach) | 10 / 10 |
 | Hoàn thiện code (Core Implementation — tests) | 30 / 30 |
 | Dự đoán độ tương tự (Similarity Predictions) | 4 / 5 |
-| Kết quả truy xuất của tôi (Competition Results) | 7 / 10 |
-| **Tổng phần cá nhân** | **56 / 60** |
+| Kết quả truy xuất của tôi (Competition Results) | 8 / 10 |
+| **Tổng phần cá nhân** | **57 / 60** |

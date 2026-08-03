@@ -36,27 +36,43 @@ BENCHMARKS = [
     {
         "query": "Người mua có thể yêu cầu trả hàng hoàn tiền trong những trường hợp nào?",
         "gold_doc": "shopee-returns-refund-policy",
-        "gold_terms": ("không nhận được sản phẩm", "sản phẩm bị lỗi", "giao sai sản phẩm"),
+        "gold_requirements": (
+            ("không nhận được sản phẩm", "không nhận đủ sản phẩm"),
+            ("hàng giả", "hàng nhái"),
+            ("sản phẩm bị lỗi", "hư hại"),
+            ("giao sai sản phẩm",),
+            ("khác biệt rõ rệt",),
+            ("hết hạn sử dụng",),
+            ("người bán đã tự thỏa thuận",),
+            ("trả hàng com",),
+        ),
     },
     {
         "query": "Thời hạn gửi yêu cầu trả hàng hoàn tiền là bao lâu?",
         "gold_doc": "shopee-returns-refund-policy",
-        "gold_terms": ("15 ngày", "24 giờ"),
+        "gold_requirements": (("15 ngày",), ("24 giờ",)),
     },
     {
         "query": "Với đơn hàng COD hoặc chuyển khoản, người mua cần điều kiện gì để nhận hoàn tiền?",
         "gold_doc": "shopee-returns-refund-policy",
-        "gold_terms": ("liên kết", "tài khoản ngân hàng", "shopeepay"),
+        "gold_requirements": (("liên kết",), ("tài khoản ngân hàng", "shopeepay")),
     },
     {
         "query": "Người mua nên làm gì nếu bao bì gói hàng bị rách, móp méo, vỡ hoặc ướt?",
         "gold_doc": "shopee-shipping-policy",
-        "gold_terms": ("từ chối nhận hàng",),
+        "gold_requirements": (("kiểm tra kỹ tình trạng bao bì",), ("từ chối nhận hàng",)),
     },
     {
         "query": "Quy định đăng bán yêu cầu người bán cung cấp thông tin sản phẩm như thế nào?",
         "gold_doc": "shopee-seller-listing-policy",
-        "gold_terms": ("thông tin chính xác", "tiêu đề", "mô tả"),
+        "gold_requirements": (
+            ("tiêu đề",),
+            ("hình ảnh",),
+            ("giá",),
+            ("mô tả",),
+            ("thông tin chính xác",),
+            ("gây nhầm lẫn",),
+        ),
         "metadata_filter": {"customer_role": "seller"},
     },
 ]
@@ -90,13 +106,42 @@ def hashing_embed(text: str) -> list[float]:
     return [value / norm for value in vector]
 
 
-def is_relevant(result: dict, benchmark: dict) -> bool:
+def is_gold_document(result: dict, benchmark: dict) -> bool:
     stored_doc_id = str(result["metadata"].get("doc_id", ""))
     original_doc_id = stored_doc_id.split("::chunk_", 1)[0]
     if original_doc_id != benchmark["gold_doc"]:
         return False
+    return True
+
+
+def requirement_coverage(results: list[dict], benchmark: dict) -> tuple[int, int]:
+    """Count gold-answer facts supported by chunks from the gold document.
+
+    Every inner tuple contains acceptable alternative phrases. A requirement is
+    covered when at least one alternative occurs in the retrieved evidence.
+    """
+    evidence = " ".join(
+        _normalise(result["content"])
+        for result in results
+        if is_gold_document(result, benchmark)
+    )
+    requirements = benchmark["gold_requirements"]
+    covered = sum(
+        any(_normalise(term) in evidence for term in alternatives)
+        for alternatives in requirements
+    )
+    return covered, len(requirements)
+
+
+def is_relevant(result: dict, benchmark: dict) -> bool:
+    if not is_gold_document(result, benchmark):
+        return False
     content = _normalise(result["content"])
-    return any(_normalise(term) in content for term in benchmark["gold_terms"])
+    return any(
+        _normalise(term) in content
+        for alternatives in benchmark["gold_requirements"]
+        for term in alternatives
+    )
 
 
 def main() -> int:
@@ -114,10 +159,21 @@ def main() -> int:
                 benchmark["query"], top_k=3, metadata_filter=benchmark.get("metadata_filter")
             )
             relevant_ranks = [rank for rank, result in enumerate(results, start=1) if is_relevant(result, benchmark)]
-            score = 2 if relevant_ranks and relevant_ranks[0] == 1 else 1 if relevant_ranks else 0
+            covered, required = requirement_coverage(results, benchmark)
+            evidence_complete = covered == required
+            score = (
+                2
+                if relevant_ranks and relevant_ranks[0] == 1 and evidence_complete
+                else 1
+                if relevant_ranks
+                else 0
+            )
             total += score
             ranks = ", ".join(map(str, relevant_ranks)) or "none"
-            print(f"### Q{number}: score={score}/2, relevant_rank={ranks}")
+            print(
+                f"### Q{number}: score={score}/2, relevant_rank={ranks}, "
+                f"gold_coverage={covered}/{required}"
+            )
             print(f"Query: {benchmark['query']}\n")
             for rank, result in enumerate(results, start=1):
                 doc_id = result["metadata"].get("doc_id")

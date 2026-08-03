@@ -143,7 +143,8 @@ PY
 │   └── test_solution.py   ← Bộ kiểm thử (42 tests)
 ├── report/
 │   ├── REPORT_NHOM.md    ← Báo cáo nhóm (1 file/nhóm)
-│   └── REPORT_CANHAN.md  ← Báo cáo cá nhân (1 file/sinh viên)
+│   └── REPORT_CANHAN.md  ← Template báo cáo cá nhân
+├── <thu-muc-thanh-vien>/ ← Mỗi thành viên lưu REPORT_CANHAN.md + bản src cá nhân
 ├── docs/
 │   ├── DATA_COLLECTION.md ← Hướng dẫn thu thập & format dữ liệu
 │   ├── EVALUATION.md     ← Các tiêu chí đánh giá
@@ -237,7 +238,6 @@ Xem chi tiết tại `docs/SCORING.md`. Tóm tắt:
 
 1. Thư mục `src/` — hoàn thành tất cả các mục CẦN LÀM (TODO) cần thiết
 2. File `report/REPORT_NHOM.md` — **một báo cáo nhóm** (chung: lựa chọn tài liệu, thiết kế chiến lược, bộ câu hỏi đánh giá, demo)
-3. File `report/REPORT_CANHAN.md` — **một báo cáo cá nhân cho mỗi sinh viên** (riêng: hướng tiếp cận, hoàn thiện code, dự đoán, kết quả truy xuất)
 
 ---
 
