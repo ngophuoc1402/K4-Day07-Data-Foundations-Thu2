@@ -25,7 +25,7 @@
 
 **Ví dụ có độ tương tự THẤP:**
 - Câu A: `"Thời tiết hôm nay nắng đẹp và mát mẻ."`
-- Câu B: `"Điều kiện đăng ký tài khoản người bán trên Tiki."`
+- Câu B: `"Quy định đăng bán sản phẩm dành cho người bán Shopee."`
 - Tại sao khác: Hai câu này thuộc hai miền hoàn toàn khác nhau — một câu nói về thời tiết, câu kia về thương mại điện tử. Vector embedding của chúng sẽ trỏ theo hai hướng rất khác nhau, cho điểm cosine gần 0 hoặc âm.
 
 **Tại sao độ tương tự cosine (cosine similarity) được ưu tiên hơn khoảng cách Euclid (Euclidean distance) cho text embeddings?**
@@ -151,39 +151,39 @@ tests/test_solution.py::TestEmbeddingStoreDeleteDocument::test_delete_returns_tr
 
 | Cặp | Câu A | Câu B | Dự đoán (ngữ nghĩa) | Điểm thực tế (mock) | Nhận xét |
 |-----|-------|-------|---------------------|---------------------|----------|
-| 1 | "Chính sách đổi trả hàng trong 30 ngày." | "Bạn có thể trả lại sản phẩm trong vòng 30 ngày kể từ ngày mua." | Cao | **0.1664** | Mock: dương nhưng thấp |
-| 2 | "Phí vận chuyển miễn phí cho đơn hàng trên 300k." | "Đơn hàng dưới 200k phải trả phí ship." | Thấp-Trung | **-0.1968** | Mock: âm — cùng chủ đề nhưng nội dung đối lập |
-| 3 | "Shopee hỗ trợ thanh toán bằng ví MoMo." | "Bạn có thể thanh toán qua thẻ Visa hoặc MasterCard." | Cao | **0.2579** | Mock: cao nhất trong 5 cặp |
-| 4 | "Trời hôm nay rất đẹp và nắng." | "Chính sách bảo mật dữ liệu khách hàng của Lazada." | Thấp | **-0.1144** | Mock: âm — đúng hướng dự đoán |
-| 5 | "Điều kiện trở thành người bán trên Tiki." | "Yêu cầu đăng ký tài khoản người bán trên Tiki." | Cao | **-0.0687** | Mock: âm dù ngữ nghĩa rất tương đồng |
+| 1 | "Chính sách trả hàng cho phép gửi yêu cầu trong 15 ngày." | "Người mua có thể yêu cầu trả hàng hoặc hoàn tiền trong vòng 15 ngày." | Cao | **0.0420** | Mock: dương nhưng thấp |
+| 2 | "Người mua nên từ chối nhận hàng khi bao bì bị rách." | "Gói hàng móp méo hoặc ướt thì không nên nhận." | Cao | **-0.1898** | Mock: âm dù cùng hướng dẫn vận chuyển |
+| 3 | "Đơn COD cần liên kết tài khoản ngân hàng để hoàn tiền." | "ShopeePay là phương thức hợp lệ để nhận tiền hoàn." | Trung-Cao | **-0.0314** | Mock không nhận ra quan hệ hoàn tiền |
+| 4 | "Trời hôm nay rất đẹp và nắng." | "Quy định đăng bán sản phẩm trên Shopee." | Thấp | **0.0517** | Điểm gần 0, đúng xu hướng dự đoán |
+| 5 | "Người bán phải cung cấp mô tả sản phẩm chính xác." | "Thông tin đăng bán không được gây nhầm lẫn về sản phẩm." | Cao | **0.0682** | Mock: dương nhưng thấp dù ngữ nghĩa gần nhau |
 
 **Kết quả nào bất ngờ nhất? Điều này nói gì về cách embeddings biểu diễn ý nghĩa?**
-> Bất ngờ nhất là **Cặp 5**: hai câu có ngữ nghĩa gần như giống hệt nhau (đều nói về điều kiện/yêu cầu trở thành người bán trên Tiki) nhưng mock embedder lại cho điểm **âm (-0.0687)**. Điều này chứng minh rõ ràng rằng mock embedder hoạt động dựa trên hash MD5 của chuỗi ký tự, không "hiểu" ngữ nghĩa. Ngược lại, một embedder thực sự (như `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`) sẽ ánh xạ cả hai câu về cùng vùng trong không gian vector và cho điểm gần 1.0 — đây chính là lý do tại sao Giai đoạn 2 yêu cầu dùng `EMBEDDING_PROVIDER=local`.
+> Bất ngờ nhất là **Cặp 2**: hai câu đều khuyên không nhận kiện hàng có bao bì hư hại nhưng mock embedder cho điểm âm `-0.1898`. Điều này cho thấy mock embedder dựa trên hash của chuỗi và không hiểu quan hệ ngữ nghĩa. Embedder đa ngôn ngữ thật được kỳ vọng ánh xạ hai câu này gần nhau hơn.
 
 ---
 
 ## 5. Kết quả truy xuất của tôi (Competition Results) — Cá nhân (10 điểm)
 
 **Chiến lược cá nhân:** `SentenceChunker(max_sentences_per_chunk=3)` — chia theo ranh giới câu, nhóm 3 câu/chunk.  
-**Bộ dữ liệu:** 7 tài liệu chính sách TMĐT (Shopee, Tiki, Lazada) → **106 chunks**.  
-**Embedder:** Mock embedder (vector hash-based, không phản ánh ngữ nghĩa — dùng cho unit test).  
-**Lọc metadata:** Có dùng `search_with_filter(metadata_filter={"platform": platform})` để giới hạn theo sàn.
+**Bộ dữ liệu chung:** 5 tài liệu chính sách Shopee chính thức trong `data/k4_ecommerce/` → **59 chunks**.
+**Embedder benchmark:** Lexical hashing có chuẩn hóa tiếng Việt (word, bigram, character 4-gram), dùng để so sánh offline ổn định hơn mock ngẫu nhiên.
+**Lọc metadata:** Q5 dùng `search_with_filter(metadata_filter={"customer_role": "seller"})` theo yêu cầu lớp K4.
 
 | # | Câu hỏi (Query) | Top-1 Chunk truy xuất được (tóm tắt) | Điểm Score | Có liên quan không? | Câu trả lời của Agent (tóm tắt) |
 |---|-------|--------------------------------|-------|-----------|--------------------------|
-| 1 | Thời hạn đổi trả hàng trên Shopee là bao nhiêu ngày? | "Chính Sách Đổi Trả và Hoàn Tiền – Shopee... Người mua có thể yêu cầu đổi trả trong 15 ngày..." | 0.3358 | ✅ Có (top-1 đúng tài liệu Shopee đổi trả) | Dựa trên thông tin chính sách đổi trả Shopee... |
-| 2 | Lazada hỗ trợ những phương thức thanh toán nào? | "Liên hệ hỗ trợ thanh toán — Chat: helpcenter.lazada.vn..." | 0.1851 | ⚠️ Một phần (chunk hỗ trợ, không phải chunk liệt kê phương thức) | Dựa trên thông tin liên hệ Lazada... |
-| 3 | Điều kiện để trở thành người bán trên Shopee là gì? | "Theo dõi đơn hàng — Người mua có thể theo dõi..." | 0.2305 | ❌ Không (mock embedder lấy sai chunk) | Dựa trên thông tin theo dõi đơn hàng... |
-| 4 | Tiki bảo vệ dữ liệu cá nhân khách hàng như thế nào? | "Chọn sản phẩm và lý do đổi/trả, đính kèm hình ảnh..." | 0.2536 | ❌ Không (mock lấy chunk đổi trả thay vì bảo mật) | Dựa trên thông tin bảo mật Lazada... |
-| 5 | Shopee miễn phí vận chuyển khi nào? | "Người mua cần: Báo cáo trong vòng 7 ngày kể từ ngày giao hàng..." | 0.1760 | ⚠️ Một phần (cùng file vận chuyển nhưng sai section) | Dựa trên thông tin đơn hàng bị thất lạc... |
+| 1 | Người mua có thể yêu cầu trả hàng/hoàn tiền trong trường hợp nào? | Mục “Các trường hợp Người Mua có thể yêu cầu...” | 0.7049 | Có, top-1 | Nêu các trường hợp không nhận hàng, hàng lỗi/sai/khác mô tả, hết hạn và Trả hàng COM. |
+| 2 | Thời hạn gửi yêu cầu trả hàng/hoàn tiền là bao lâu? | Chunk chứa 15 ngày và 24 giờ | 0.5003 | Có, top-2 | Thông thường 15 ngày; thực phẩm tươi sống/đông lạnh là 24 giờ. |
+| 3 | Đơn COD/chuyển khoản cần điều kiện gì để nhận hoàn tiền? | Mục điều kiện nhận hoàn tiền COD | 0.6033 | Có, top-1 | Phải liên kết tài khoản ngân hàng hoặc ví hợp lệ như ShopeePay. |
+| 4 | Làm gì khi bao bì bị rách, móp méo, vỡ hoặc ướt? | Câu khuyến cáo kiểm tra bao bì | 0.4965 | Có, top-1 | Người mua nên từ chối nhận hàng. |
+| 5 | Quy định đăng bán yêu cầu thông tin sản phẩm thế nào? | Mục yêu cầu tiêu đề, hình ảnh, giá và mô tả | 0.3860 | Có, top-3 | Thông tin phải thống nhất, chính xác và không gây nhầm lẫn. |
 
-**Bao nhiêu câu hỏi trả về chunk có liên quan trong top-3:** 3 / 5 *(top-1 đúng cho Q1; Q2, Q5 có chunk liên quan trong top-3)*
+**Bao nhiêu câu hỏi trả về chunk có liên quan trong top-3:** 5 / 5. **Điểm theo rubric:** 8 / 10.
 
 **Phân tích kết quả:**
-> Mock embedder sinh vector ngẫu nhiên theo hash chuỗi ký tự — kết quả retrieval không phản ánh ngữ nghĩa. Q3 và Q4 bị truy xuất sai hoàn toàn vì mock không "hiểu" sự khác biệt giữa "điều kiện người bán" và "theo dõi đơn hàng". Với `EMBEDDING_PROVIDER=local` (sentence-transformers), kết quả dự kiến sẽ đạt 5/5 vì model đa ngữ hiểu ngữ nghĩa tiếng Việt. Đây là minh chứng rõ nhất cho việc tại sao **chọn đúng embedding backend** quan trọng hơn thuật toán chunking trong pipeline RAG.
+> `SentenceChunker(max_sentences_per_chunk=3)` cho kết quả tốt với văn bản chính sách: Q1, Q3 và Q4 có căn cứ ở top-1. Q2 bị heading/ghi chú ngắn đứng trên chunk có đáp án; Q5 đã lọc đúng hai tài liệu seller nhưng phần phạm vi áp dụng vẫn đứng cao hơn phần yêu cầu thông tin. Có thể cải thiện bằng chunking theo heading và loại phần ghi chú benchmark trước khi ingest.
 
 **Điều hay nhất học được từ thực nghiệm này:**
-> Metadata filtering (`search_with_filter`) giúp cải thiện đáng kể precision ngay cả với mock embedder — lọc theo `platform` đã loại bỏ nhiều nhiễu trước khi tính similarity. Khi nhóm so sánh chiến lược trong Giai đoạn 2, việc thiết kế metadata schema tốt (có `category`, `platform`, `language`) sẽ là yếu tố tạo ra sự khác biệt lớn giữa các thành viên.
+> Metadata `customer_role`, `category` và `source_url` giúp vừa lọc đúng phạm vi buyer/seller vừa truy vết nguồn. Q5 cho thấy filter cấp tài liệu giảm nhiễu, nhưng vẫn cần chunking tốt để đưa đúng section lên top-1.
 
 ---
 

@@ -1,8 +1,9 @@
 # Báo Cáo Cá Nhân — Lab 7: Embedding & Vector Store
 
 **Họ tên:** Ngô Minh Phước
-**Nhóm:** [Chờ bạn cập nhật tên nhóm]
-**Ngày:** 3/8/2026
+**Mã số sinh viên:** 2A202601576
+**Nhóm:** K4 — Thứ 2
+**Ngày:** 2026-08-03
 
 > **Nộp 1 bản / sinh viên.** Phần nhóm (lựa chọn tài liệu, thiết kế chiến lược, bộ câu hỏi đánh giá, demo) nộp chung 1 bản trong `REPORT_NHOM.md`. Chi tiết thang điểm: `docs/SCORING.md`.
 
@@ -74,20 +75,21 @@ Vượt qua bộ kiểm thử là điều kiện tính điểm phần này.
 
 ### Kết Quả Kiểm Thử (Test Results)
 
-```
-============================= test session starts ==============================
-platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.6.0
-collected 42 items
+```text
+$ PYTHONPATH=.. python3 -m unittest tests.test_solution -v
+...
+----------------------------------------------------------------------
+Ran 42 tests in 0.003s
 
-42 tests PASSED
-
-Tất cả các phần chính đều đã vượt qua kiểm thử, gồm:
-FixedSizeChunker, SentenceChunker, RecursiveChunker,
-compute_similarity, ChunkingStrategyComparator,
-EmbeddingStore và KnowledgeBaseAgent.
+OK
 ```
 
 **Số lượng bài test vượt qua (pass):** 42 / 42
+
+Máy kiểm tra hiện không cài executable `pytest`, vì vậy tôi chạy trực tiếp cùng
+42 test case `unittest` trong `tests/test_solution.py`. Thư mục cá nhân chứa đầy
+đủ package `src` và được import từ chính thư mục `Phuoc_2A202601576`, không dùng
+package `src` ở repository root.
 
 ---
 
@@ -108,18 +110,27 @@ EmbeddingStore và KnowledgeBaseAgent.
 
 ## 5. Kết quả truy xuất của tôi (Competition Results) — Cá nhân (10 điểm)
 
-Chưa có bộ benchmark chính thức của nhóm tại thời điểm viết báo cáo, nên tôi chạy **benchmark cá nhân tạm thời** trên bộ dữ liệu khởi động trong `data/k4_ecommerce/` để tự kiểm tra chất lượng truy xuất của mã nguồn `src`. Các kết quả dưới đây hữu ích để đánh giá hiện trạng pipeline, nhưng vẫn cần được thay bằng 5 câu hỏi chung của nhóm khi hoàn thiện phần nhóm.
+**Chiến lược cá nhân:** `RecursiveChunker(chunk_size=700)`.
+
+**Bộ dữ liệu chung:** 5 tài liệu chính sách Shopee trong `data/k4_ecommerce/`, loại hai file starter dùng `example.com` → **24 chunks**.
+
+**Embedder benchmark:** lexical hashing có chuẩn hóa tiếng Việt (word, bigram và character 4-gram). Backend offline này tái lập được và phù hợp để so sánh chiến lược hơn `_mock_embed`, nhưng không được xem là embedding ngữ nghĩa thật.
+
+**Lọc metadata:** Q5 dùng `metadata_filter={"customer_role": "seller"}`.
 
 | # | Câu hỏi (Query) | Top-1 Chunk truy xuất được (tóm tắt) | Điểm Score | Có liên quan không? (Relevant) | Câu trả lời của Agent (tóm tắt) |
 |---|-------|--------------------------------|-------|-----------|------------------------|
-| 1 | Người mua cần làm gì khi yêu cầu đổi trả hàng? | Chunk từ tài liệu `k4-seller-listing`; top-1 bị nhiễu và không trả lời trực tiếp yêu cầu đổi trả của người mua | 0.1929 | Không | Người mua cần gửi yêu cầu đổi trả trong thời hạn được nêu trên trang sản phẩm hoặc chính sách của sàn và kèm bằng chứng phù hợp nếu hàng bị lỗi hoặc không đúng mô tả. |
-| 2 | Người bán có trách nhiệm gì trong quy trình đổi trả? | Chunk từ tài liệu `k4-returns-policy`; có chứa thông tin liên quan đến trách nhiệm phản hồi của người bán | 0.0680 | Có | Người bán có trách nhiệm phản hồi theo quy trình của sàn trong quá trình đổi trả. |
-| 3 | Người bán phải cung cấp những thông tin nào khi đăng bán sản phẩm? | Chunk từ tài liệu `k4-seller-listing`; nêu rõ giá, mô tả và tình trạng hàng | 0.1948 | Có | Người bán phải cung cấp thông tin sản phẩm chính xác, bao gồm giá, mô tả và tình trạng hàng. |
-| 4 | Những sản phẩm nào không được đăng bán? | Top-1 bị lệch sang tài liệu `k4-returns-policy`, nhưng trong top-3 vẫn có chunk thuộc `k4-seller-listing` liên quan đến hàng bị hạn chế hoặc bị cấm | -0.0121 | Không ở top-1 | Các sản phẩm bị hạn chế hoặc bị cấm không được đăng bán. |
-| 5 | Tài liệu nào dành cho người bán? | Top-1 bị nhiễu từ `k4-returns-policy`; khi lọc metadata `customer_role=seller`, kết quả đúng là `k4-seller-listing` | 0.1396 | Không ở top-1 | Tài liệu dành cho người bán là quy định đăng bán, có metadata `customer_role` là `seller`. |
+| 1 | Người mua có thể yêu cầu trả hàng/hoàn tiền trong những trường hợp nào? | Chunk đúng tài liệu nhưng chỉ chứa phạm vi/điều kiện chung; danh sách trường hợp không xuất hiện trong top-3 | 0.6156 | Không | Không chấm câu trả lời là đúng vì context top-3 thiếu danh sách gold answer. |
+| 2 | Thời hạn gửi yêu cầu trả hàng/hoàn tiền là bao lâu? | Chunk chứa thời hạn 15 ngày và ngoại lệ 24 giờ | 0.4791 | Có, top-1 | Thông thường 15 ngày từ khi giao thành công; thực phẩm tươi sống/đông lạnh là 24 giờ. |
+| 3 | Đơn COD/chuyển khoản cần điều kiện gì để nhận hoàn tiền? | Chunk chứa điều kiện liên kết phương thức nhận hoàn tiền | 0.5568 | Có, top-1 | Phải liên kết tài khoản ngân hàng hoặc ví hợp lệ như ShopeePay. |
+| 4 | Người mua nên làm gì khi bao bì bị rách, móp méo, vỡ hoặc ướt? | Chunk khuyến cáo kiểm tra bao bì và từ chối nhận hàng | 0.3390 | Có, top-1 | Người mua nên kiểm tra bao bì và từ chối nhận hàng nếu có dấu hiệu hư hại. |
+| 5 | Với `customer_role=seller`, quy định đăng bán yêu cầu thông tin sản phẩm thế nào? | Top-1 là phần phạm vi; chunk chứa yêu cầu tiêu đề, hình ảnh, giá và mô tả đứng top-2 | 0.4683 | Có, top-2 | Thông tin phải thống nhất, chính xác, đúng quy định và không gây nhầm lẫn. |
 
-**Bao nhiêu câu hỏi trả về chunk có liên quan trong top-3?** 4 / 5
-> Nhận xét: với `_mock_embed`, retrieval vẫn khá nhiễu dù nhiều câu hỏi còn tìm thấy thông tin đúng trong top-3. Điều này phù hợp với cảnh báo trong README rằng mock embedding chỉ nên dùng cho unit test, không nên dùng để kết luận chất lượng retrieval.
+**Bao nhiêu câu hỏi trả về chunk có liên quan trong top-3?** 4 / 5.
+
+**Điểm theo rubric sau khi kiểm tra câu trả lời dựa trên context:** 7 / 10.
+
+> Recursive chunking giữ tốt các đoạn về thời hạn, COD và vận chuyển, nhưng chunk 700 ký tự làm danh sách dài ở Q1 bị tách khỏi phần có độ trùng từ cao. Q5 cho thấy metadata filter đưa truy xuất vào đúng hai tài liệu seller, nhưng chunk đúng vẫn đứng sau phần phạm vi áp dụng.
 
 **Điều hay nhất tôi học được từ thành viên khác / nhóm khác (qua demo):**
 > Điều tôi thấy hữu ích nhất là chiến lược dữ liệu và metadata thường ảnh hưởng đến retrieval nhiều không kém bản thân thuật toán chunking. Khi tài liệu có `source_url`, `category`, `language`, `customer_role` hoặc `document_version` rõ ràng, việc lọc và kiểm chứng câu trả lời trở nên dễ hơn nhiều. Tôi cũng học được rằng không nên kết luận chất lượng chiến lược chỉ từ unit test, mà cần benchmark trên bộ tài liệu thật với embedder ngữ nghĩa phù hợp.
@@ -134,5 +145,5 @@ Chưa có bộ benchmark chính thức của nhóm tại thời điểm viết b
 | Hướng tiếp cận của tôi (My Approach) | 10 / 10 |
 | Hoàn thiện code (Core Implementation — tests) | 30 / 30 |
 | Dự đoán độ tương tự (Similarity Predictions) | 4 / 5 |
-| Kết quả truy xuất của tôi (Competition Results) | 8 / 10 |
-| **Tổng phần cá nhân** | **57 / 60** |
+| Kết quả truy xuất của tôi (Competition Results) | 7 / 10 |
+| **Tổng phần cá nhân** | **56 / 60** |

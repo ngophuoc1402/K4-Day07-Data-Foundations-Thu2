@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import Any, Callable
 
-from src.chunking import _dot
-from src.embeddings import _mock_embed
-from src.models import Document
+from .chunking import _dot
+from .embeddings import _mock_embed
+from .models import Document
 
 
 class EmbeddingStore:

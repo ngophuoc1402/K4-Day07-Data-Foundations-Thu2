@@ -1,155 +1,176 @@
 # Báo Cáo Nhóm — Lab 7: Embedding & Vector Store
 
-**Nhóm:** K4 — Nhóm Nguyễn Xuân Quân
-**Thành viên:** Nguyễn Xuân Quân (2A202601976)
+**Nhóm:** K4 — Thứ 2
+**Thành viên:**
+- Ngô Minh Phước — 2A202601576
+- Nguyễn Xuân Quân — 2A202601976
+- Phạm Trung Hiếu — 2A202601834
+
 **Ngày:** 2026-08-03
 
-> **Nộp 1 bản / nhóm.** Phần cá nhân (hướng tiếp cận, kết quả riêng, dự đoán…) mỗi thành viên nộp riêng trong `REPORT_CANHAN.md`. Chi tiết thang điểm: `docs/SCORING.md`.
-
-**Tổng điểm phần nhóm: 40** = Lựa chọn tài liệu (10) + Thiết kế chiến lược (15) + Chất lượng truy xuất (10) + Thuyết trình (5).
+> Báo cáo này dùng chung một corpus, một bộ 5 benchmark queries và ba chiến lược chunking. Phần cá nhân của từng thành viên được lưu trong thư mục mang tên thành viên tại repository root.
 
 ---
 
-## 1. Lựa chọn tài liệu (Document Set Quality) — Nhóm (10 điểm)
+## 1. Lựa chọn tài liệu (Document Set Quality) — 10 điểm
 
-### Phạm vi bộ tài liệu (Scope)
+### Phạm vi
 
-**Chủ đề (cố định theo lớp K4):** Chính sách thương mại điện tử / hỗ trợ khách hàng (thanh toán, đổi trả, giao hàng, quyền riêng tư, điều kiện người bán…).
+Nhóm tập trung vào chính sách thương mại điện tử và hỗ trợ khách hàng của Shopee: trả hàng/hoàn tiền, vận chuyển, mã miễn phí vận chuyển, quy định đăng bán và sản phẩm cấm/hạn chế. Tất cả tài liệu benchmark nằm trong `data/k4_ecommerce/`.
 
-**Phạm vi cụ thể nhóm tập trung:**
-> Nhóm tập trung vào **5 mảng chính sách** của 3 sàn TMĐT lớn tại Việt Nam (Shopee, Tiki, Lazada): chính sách đổi trả, vận chuyển/giao hàng, thanh toán, điều kiện người bán, và bảo mật dữ liệu — đây là những FAQ phổ biến nhất mà người dùng và người bán thường hỏi.
+### Danh sách tài liệu
 
-### Danh sách tài liệu (Data Inventory)
+| # | Tài liệu | Nguồn chính thức | Số ký tự | Metadata chính |
+|---|----------|------------------|-----------|----------------|
+| 1 | Chính sách trả hàng và hoàn tiền | https://help.shopee.vn/portal/4/article/77251 | 3.846 | `customer_role=both`, `category=returns` |
+| 2 | Chính sách vận chuyển Shopee | https://help.shopee.vn/portal/4/article/77250 | 3.937 | `customer_role=both`, `category=shipping` |
+| 3 | Điều kiện sử dụng mã miễn phí vận chuyển | https://help.shopee.vn/portal/4/article/79606 | 1.910 | `customer_role=buyer`, `category=shipping_promo` |
+| 4 | Quy định về đăng bán sản phẩm | https://help.shopee.vn/portal/4/article/77246 | 2.390 | `customer_role=seller`, `category=listing` |
+| 5 | Chính sách cấm/hạn chế sản phẩm | https://help.shopee.vn/portal/4/article/77247 | 1.646 | `customer_role=seller`, `category=prohibited_products` |
 
-| # | Tên tài liệu | Nguồn (Source URL) | Ngày lấy / Phiên bản | Số ký tự | Metadata đã gán |
-|---|--------------|--------------------|--------------------|----------|-----------------|
-| 1 | Shopee – Chính Sách Đổi Trả và Hoàn Tiền | https://help.shopee.vn/portal/article/77228 | 2026-08-03 / 2026-Q3 | ~2.800 | platform, category, language |
-| 2 | Shopee – Chính Sách Vận Chuyển và Giao Hàng | https://help.shopee.vn/portal/article/77229 | 2026-08-03 / 2026-Q3 | ~2.600 | platform, category, language |
-| 3 | Shopee – Điều Kiện và Quy Định Người Bán | https://seller.shopee.vn/edu/article/1030 | 2026-08-03 / 2026-Q3 | ~3.100 | platform, category, language |
-| 4 | Tiki – Chính Sách Đổi Trả Hàng | https://tiki.vn/chinh-sach-bao-hanh-doi-tra.html | 2026-08-03 / 2026-Q2 | ~2.700 | platform, category, language |
-| 5 | Tiki – Chính Sách Bảo Mật Dữ Liệu | https://tiki.vn/chinh-sach-bao-mat.html | 2026-08-03 / 2026-Q1 | ~3.200 | platform, category, language |
-| 6 | Lazada – Chính Sách Đổi Trả và Hoàn Tiền | https://helpcenter.lazada.vn/s/faq/knowledge?categoryId=1000027305 | 2026-08-03 / 2026-Q3 | ~2.900 | platform, category, language |
-| 7 | Lazada – Phương Thức Thanh Toán | https://www.lazada.vn/helpcenter/phuong-thuc-thanh-toan-27.html | 2026-08-03 / 2026-Q3 | ~2.800 | platform, category, language |
+Hai file starter dùng `example.com` vẫn được giữ theo cấu trúc ban đầu của đề nhưng bị loại khỏi corpus benchmark. Danh sách nguồn có thể kiểm tra trong `data/k4_ecommerce/sources.csv`.
 
-**Danh sách kiểm tra quản trị dữ liệu (Data governance checklist):**
-- [x] Tập tài liệu (Corpus) chỉ chứa nguồn công khai/được phép dùng và không chứa dữ liệu cá nhân, thông tin đăng nhập hoặc tài liệu nội bộ.
-- [x] Mỗi tài liệu có `source_url`, `retrieved_at`, `document_version` (hoặc ngày hiệu lực) trong metadata.
+### Quản trị dữ liệu
 
-### Cấu trúc Metadata (Metadata Schema)
+- [x] Corpus gồm 5 nguồn công khai từ Shopee Help Center.
+- [x] Không chứa dữ liệu cá nhân, thông tin đăng nhập hoặc tài liệu nội bộ.
+- [x] Mỗi tài liệu có `doc_id`, `source_url`, `retrieved_at` và `document_version`.
+- [x] Mỗi tài liệu có `customer_role`, `category` và `language` phục vụ filtering.
 
-| Trường metadata | Kiểu | Ví dụ giá trị | Tại sao hữu ích cho truy xuất (retrieval)? |
-|----------------|------|---------------|---------------------------------------------|
-| `source_url` | string | `"https://help.shopee.vn/..."` | Cho phép truy vết và kiểm tra tính cập nhật của tài liệu |
-| `retrieved_at` | string (date) | `"2026-08-03"` | Kiểm tra độ mới của thông tin, lọc tài liệu cũ |
-| `document_version` | string | `"2026-Q3"` | Phân biệt phiên bản chính sách theo thời gian |
-| `category` | string | `"doi_tra"`, `"van_chuyen"`, `"thanh_toan"` | **Lọc theo loại chính sách** — rất hữu ích khi người dùng hỏi về một mảng cụ thể |
-| `platform` | string | `"shopee"`, `"tiki"`, `"lazada"` | **Lọc theo sàn TMĐT** — tránh nhầm chính sách giữa các sàn |
-| `language` | string | `"vi"` | Mở rộng sang đa ngôn ngữ trong tương lai |
-| `doc_id` | string | `"shopee_chinh_sach_doi_tra"` | Xóa/cập nhật toàn bộ chunk của 1 tài liệu khi chính sách thay đổi |
+### Metadata schema
 
----
-
-## 2. Thiết kế chiến lược (Strategy Design) — Nhóm (15 điểm)
-
-> Mỗi thành viên thử **một chiến lược khác nhau** trên cùng bộ tài liệu; nhóm tổng hợp và so sánh ở đây.
-
-### Phân tích đường cơ sở (Baseline Analysis)
-
-Chạy `ChunkingStrategyComparator().compare()` trên 3 tài liệu (`lazada_chinh_sach_doi_tra.md`, `lazada_chinh_sach_thanh_toan.md`, `shopee_chinh_sach_doi_tra.md`) với `chunk_size=200`:
-
-| Tài liệu | Chiến lược | Số lượng Chunk | Độ dài trung bình | Giữ được ngữ cảnh? |
-|----------|-----------|----------------|------------------|-------------------|
-| lazada_doi_tra.md (2.515 chars) | FixedSizeChunker | 13 | 193.5 chars | ⚠️ Có thể cắt giữa câu |
-| lazada_doi_tra.md | SentenceChunker | 14 | 178.3 chars | ✅ Giữ nguyên câu |
-| lazada_doi_tra.md | RecursiveChunker | 22 | 112.8 chars | ✅ Tôn trọng cấu trúc |
-| lazada_thanh_toan.md (2.512 chars) | FixedSizeChunker | 13 | 193.2 chars | ⚠️ Cắt giữa danh sách |
-| lazada_thanh_toan.md | SentenceChunker | 11 | 226.7 chars | ✅ Chunk lớn hơn, đủ ngữ cảnh |
-| lazada_thanh_toan.md | RecursiveChunker | 20 | 124.0 chars | ✅ Chunk nhỏ, chi tiết |
-
-**Nhận xét baseline:**
-- `FixedSizeChunker`: nhanh, đơn giản, nhưng dễ cắt đứt câu hoặc danh sách giữa chừng.
-- `SentenceChunker`: chunk có ý nghĩa trọn vẹn, phù hợp với văn bản chính sách dạng văn xuôi.
-- `RecursiveChunker`: chunk nhỏ và nhiều nhất, tốt cho truy xuất chi tiết nhưng có thể mất ngữ cảnh nếu câu trả lời cần nhiều bước.
-
-### Chiến lược của từng thành viên
-
-**Thành viên 1 — Nguyễn Xuân Quân**
-- **Loại chiến lược:** SentenceChunker (max_sentences_per_chunk=3)
-- **Mô tả & lý do chọn:** Tài liệu chính sách TMĐT viết theo dạng danh sách điều khoản và văn xuôi giải thích. `SentenceChunker` tách theo ranh giới câu và nhóm 3 câu/chunk — đảm bảo mỗi chunk mang đủ ngữ cảnh (không bị cắt giữa câu như FixedSize) nhưng cũng không quá dài (như khi để mặc định RecursiveChunker). Phù hợp với chủ đề FAQ/policy vì mỗi câu trong policy thường là 1 quy tắc riêng biệt.
-- **Code snippet:**
-```python
-from src import SentenceChunker
-chunker = SentenceChunker(max_sentences_per_chunk=3)
-# Tạo ra 106 chunks từ 7 tài liệu (avg 15 chunks/doc)
-```
-
-### So Sánh Giữa Các Thành Viên
-
-| Thành viên | Chiến lược | Số chunk / 7 docs | Điểm mạnh | Điểm yếu |
-|-----------|-----------|-------------------|-----------|----------|
-| Nguyễn Xuân Quân | SentenceChunker (3 câu/chunk) | 106 chunks | Chunk có nghĩa trọn vẹn; phù hợp văn bản chính sách dạng điều khoản | Chunk quá lớn nếu câu dài (bảng, danh sách nhiều cột) |
-
-**Chiến lược nào tốt nhất cho chủ đề này? Tại sao?**
-> Với dữ liệu chính sách TMĐT tiếng Việt, `SentenceChunker` cho kết quả tốt nhất vì tài liệu được viết theo cấu trúc điều khoản rõ ràng — mỗi câu là 1 quy tắc. Nhóm 3 câu/chunk đảm bảo đủ ngữ cảnh để agent trả lời mà không cần dữ liệu từ nhiều chunk. Nếu dữ liệu có nhiều bảng (như bảng so sánh phí), `RecursiveChunker` với `separator=["\n\n", "\n"]` sẽ tốt hơn vì tôn trọng ranh giới bảng.
+| Trường | Kiểu | Ví dụ | Mục đích |
+|--------|------|-------|----------|
+| `doc_id` | string | `shopee-returns-refund-policy` | Truy vết, cập nhật hoặc xóa tài liệu gốc |
+| `customer_role` | string | `buyer`, `seller`, `both` | Lọc chính sách theo vai trò người dùng |
+| `category` | string | `returns`, `shipping`, `listing` | Thu hẹp kết quả theo chủ đề |
+| `language` | string | `vi` | Hỗ trợ corpus đa ngôn ngữ về sau |
+| `source_url` | string | URL Help Center | Kiểm chứng nguồn câu trả lời |
+| `retrieved_at` | date string | `2026-08-03` | Theo dõi ngày thu thập |
+| `document_version` | string | `help-center-2026-08-03` | Theo dõi phiên bản chính sách |
 
 ---
 
-## 3. Câu hỏi đánh giá & Chất lượng truy xuất (Retrieval Quality) — Nhóm (10 điểm)
+## 2. Thiết kế chiến lược (Strategy Design) — 15 điểm
 
-### Câu hỏi đánh giá & Câu trả lời chuẩn (nhóm thống nhất)
+### Baseline với `chunk_size=200`
 
-> **Đúng 5 câu hỏi**, đa dạng, có thể kiểm chứng; câu Q2 và Q5 cần lọc metadata để trả lời chính xác.
+Kết quả từ `ChunkingStrategyComparator().compare()`:
 
-| # | Câu hỏi (Query) | Câu trả lời chuẩn (Gold Answer) | Chunk nào chứa thông tin? |
-|---|-------|-------------------------------|--------------------------|
-| 1 | Thời hạn đổi trả hàng trên Shopee là bao nhiêu ngày? | 15 ngày kể từ ngày nhận hàng | `shopee_chinh_sach_doi_tra` — mục 1 "Điều kiện đổi trả hàng" |
-| 2 | Lazada hỗ trợ những phương thức thanh toán nào? *(cần lọc platform=lazada)* | COD, thẻ tín dụng/ghi nợ (Visa/Master/JCB), ví điện tử (MoMo, ZaloPay, VNPay), chuyển khoản, trả góp 0% | `lazada_chinh_sach_thanh_toan` — mục 1 "Các phương thức thanh toán" |
-| 3 | Điều kiện để trở thành người bán cá nhân trên Shopee là gì? | Có SĐT VN, đủ 18 tuổi, có CMND/CCCD, có tài khoản ngân hàng VN | `shopee_dieu_kien_nguoi_ban` — mục 1 "Điều kiện đối với cá nhân" |
-| 4 | Tiki bảo vệ dữ liệu cá nhân của khách hàng bằng cách nào? | Mã hóa TLS/SSL, hash mật khẩu bằng bcrypt, 2FA cho nhân viên, kiểm toán định kỳ | `tiki_chinh_sach_bao_mat` — mục 5 "Bảo mật dữ liệu" |
-| 5 | Shopee miễn phí vận chuyển khi nào? *(cần lọc platform=shopee, category=van_chuyen)* | Khi có mã giảm giá ship từ Shopee, hoặc là thành viên Shopee Premium/Live, hoặc trong chương trình khuyến mãi đặc biệt | `shopee_chinh_sach_van_chuyen` — mục 3 "Miễn phí vận chuyển" |
+| Tài liệu | Chiến lược | Số chunk | Độ dài TB | Nhận xét |
+|----------|------------|----------|------------|----------|
+| Trả hàng/hoàn tiền | FixedSize | 26 | 196 | Ổn định nhưng cắt giữa danh sách |
+| Trả hàng/hoàn tiền | Sentence | 25 | 152 | Dễ đọc, giữ ranh giới câu |
+| Trả hàng/hoàn tiền | Recursive | 28 | 135 | Tôn trọng đoạn nhưng dễ phân mảnh |
+| Vận chuyển | FixedSize | 26 | 199 | Có thể cắt giữa điều khoản |
+| Vận chuyển | Sentence | 34 | 114 | Rõ nghĩa nhưng có nhiều chunk ngắn |
+| Vận chuyển | Recursive | 31 | 125 | Cân bằng giữa đoạn và chi tiết |
+| Mã freeship | FixedSize | 13 | 193 | Phù hợp baseline tài liệu ngắn |
+| Mã freeship | Sentence | 15 | 126 | Truy xuất tốt từng điều kiện |
+| Mã freeship | Recursive | 15 | 125 | Chia tự nhiên theo mục và đoạn |
 
-### Tổng hợp chất lượng truy xuất của nhóm
+### Chiến lược từng thành viên
 
-> Cách chấm: **2 điểm/câu** — top-3 chứa chunk liên quan + agent trả lời đúng (2), có liên quan nhưng thiếu/không ở top-1 (1), không có trong top-3 (0).
+**Ngô Minh Phước — RecursiveChunker**
 
-| # | Câu hỏi | Chiến lược tốt nhất | Chunk liên quan trong top-3? | Ghi chú |
-|---|---------|-------------------|------------------------------|---------|
-| 1 | Thời hạn đổi trả Shopee | SentenceChunker + filter platform=shopee | ✅ Top-1 đúng (score 0.3358) | Mock embedder tình cờ cho kết quả tốt |
-| 2 | Phương thức thanh toán Lazada | SentenceChunker + filter platform=lazada | ⚠️ Top-1 là chunk liên hệ, không phải chunk danh sách phương thức | Mock cần embedder thật để cải thiện |
-| 3 | Điều kiện người bán Shopee | SentenceChunker + filter platform=shopee, category=dieu_kien_nguoi_ban | ❌ Top-1 sai (mock embedder lấy chunk theo dõi đơn hàng) | Với local embedder sẽ cải thiện |
-| 4 | Bảo mật dữ liệu Tiki | SentenceChunker + filter platform=tiki, category=bao_mat | ❌ Top-1 sai (mock lấy chunk đổi trả) | Cần semantic embedder |
-| 5 | Miễn phí vận chuyển Shopee | SentenceChunker + filter platform=shopee, category=van_chuyen | ⚠️ Cùng file nhưng sai section (chunk xử lý thất lạc) | Chunk miễn phí ship nằm trong top-3 |
+- Cấu hình: `RecursiveChunker(chunk_size=700)`.
+- Lý do: policy có nhiều heading, đoạn và danh sách; recursive ưu tiên ranh giới cấu trúc trước khi cắt cứng.
+- Kết quả benchmark: **7/10**, tạo **24 chunks**.
 
-**Điểm ước tính với mock embedder: 4/10** | **Dự kiến với local embedder: 8-9/10**
+**Nguyễn Xuân Quân — SentenceChunker**
 
-**Lọc bằng metadata có giúp ích không? Ở câu hỏi nào?**
-> Metadata filtering (`search_with_filter`) **rất hữu ích** trong bộ dữ liệu này vì 3 sàn khác nhau có chính sách tương tự (ví dụ: cả Shopee, Tiki, Lazada đều có chính sách đổi trả). Không có filter, similarity search rất dễ trả về chính sách của sai sàn. Filter `platform` giúp Q2 và Q5 tập trung đúng sàn, giảm nhiễu từ 106 chunks xuống ~30 chunks cùng sàn trước khi tính similarity — cải thiện precision rõ rệt ngay cả với mock embedder. Q3 và Q4 thậm chí cần double filter (`platform` + `category`) để đạt kết quả tốt nhất.
+- Cấu hình: `SentenceChunker(max_sentences_per_chunk=3)`.
+- Lý do: mỗi câu policy thường biểu diễn một quy tắc; nhóm ba câu giữ đủ ngữ cảnh mà không tạo chunk quá dài.
+- Kết quả benchmark: **8/10**, tạo **59 chunks**.
+
+**Phạm Trung Hiếu — FixedSizeChunker**
+
+- Cấu hình: `FixedSizeChunker(chunk_size=500, overlap=100)`.
+- Lý do: làm baseline có overlap 20%, giảm mất ngữ cảnh tại biên chunk.
+- Kết quả benchmark: **7/10**, tạo **32 chunks**.
+
+### So sánh
+
+| Thành viên | Chiến lược | Điểm /10 | Điểm mạnh | Điểm yếu |
+|------------|------------|----------|-----------|----------|
+| Ngô Minh Phước | Recursive (700) | 7 | Giữ cấu trúc đoạn, Q2-Q4 tốt | Danh sách dài ở Q1 bị phân tách |
+| Nguyễn Xuân Quân | Sentence (3 câu) | 8 | Tốt nhất tổng thể; Q1, Q3, Q4 ở top-1 | Heading ngắn gây nhiễu Q2; Q5 ở top-3 |
+| Phạm Trung Hiếu | FixedSize (500/100) | 7 | Baseline ổn định, overlap giữ ngữ cảnh | Có thể cắt giữa câu; Q2/Q4 ở top-3 |
+
+`SentenceChunker` tốt nhất trong lượt chạy này với 8/10. Kết quả được tạo lại bằng `python3 scripts/run_group_benchmark.py`; script dùng lexical hashing có chuẩn hóa tiếng Việt để benchmark offline, thay vì mock embedding ngẫu nhiên. Điểm này là kết quả đánh giá retrieval kết hợp với kiểm tra thủ công câu trả lời dựa trên context, không phải metric sinh tự động bởi một LLM-as-judge.
 
 ---
 
-## 4. Thuyết trình (Demo) & Bài học nhóm — Nhóm (5 điểm)
+## 3. Benchmark & Chất lượng truy xuất — 10 điểm
 
-**Những phân tích (insights) hay nhất nhóm sẽ trình bày:**
-> 1. **Mock vs Real Embedder**: Kết quả đối lập giữa mock (random vector) và semantic embedder minh họa rõ ràng tại sao lựa chọn embedding backend quan trọng hơn thuật toán chunking.
-> 2. **Metadata như "pre-filter"**: Thiết kế schema tốt (`platform`, `category`) giúp cắt giảm search space từ 106 → ~15 chunks, tăng precision mà không cần embedder mạnh hơn.
-> 3. **SentenceChunker phù hợp với policy text**: Văn bản điều khoản TMĐT có cấu trúc câu rõ ràng — tách theo câu tự nhiên hơn so với cắt cứng theo ký tự.
+### Năm câu hỏi và gold answers
 
-**Bài học rút ra khi so sánh trong nhóm:**
-> Cùng một bộ 7 tài liệu, khi dùng `FixedSizeChunker` (chunk_size=200) sẽ tạo ra nhiều chunk bị cắt giữa danh sách hoặc bảng so sánh — agent nhận được context bị đứt đoạn, câu trả lời thiếu thông tin. `SentenceChunker` tạo ra chunk có nghĩa hơn nhưng kích thước không đều (bảng dữ liệu có thể vào cùng 1 chunk rất dài). `RecursiveChunker` với separator `\n\n` tốt nhất cho cấu trúc Markdown vì tôn trọng ranh giới đoạn văn.
+| # | Query | Gold answer | Tài liệu/section chứa đáp án |
+|---|-------|-------------|------------------------------|
+| 1 | Người mua có thể yêu cầu trả hàng/hoàn tiền trong những trường hợp nào? | Không nhận/thiếu hàng, hàng giả, lỗi hoặc hư hại, giao sai, khác mô tả, hết hạn, người bán đồng ý, hoặc Trả hàng COM hợp lệ. | `shopee-returns-refund-policy`, mục các trường hợp yêu cầu |
+| 2 | Thời hạn gửi yêu cầu trả hàng/hoàn tiền là bao lâu? | Thông thường 15 ngày từ khi giao thành công; thực phẩm tươi sống/đông lạnh là 24 giờ. | `shopee-returns-refund-policy`, mục thời hạn |
+| 3 | Đơn COD/chuyển khoản cần điều kiện gì để nhận hoàn tiền? | Phải liên kết tài khoản Shopee với tài khoản ngân hàng hoặc ví hợp lệ như ShopeePay. | `shopee-returns-refund-policy`, mục hoàn tiền COD |
+| 4 | Người mua nên làm gì khi bao bì bị rách, móp méo, vỡ hoặc ướt? | Kiểm tra bao bì và nên từ chối nhận hàng. | `shopee-shipping-policy`, mục khuyến cáo vận chuyển |
+| 5 | Với `customer_role=seller`, quy định đăng bán yêu cầu thông tin sản phẩm thế nào? | Tiêu đề, hình ảnh, giá, mô tả phải thống nhất, chính xác, đúng quy định và không gây nhầm lẫn. | `shopee-seller-listing-policy`, mục yêu cầu thông tin |
 
-**Nếu làm lại, nhóm sẽ thay đổi gì trong chiến lược dữ liệu (data strategy)?**
-> 1. **Thêm trường metadata `section`** (ví dụ: "điều_kien", "quy_trinh", "phi_phi") để filter theo mục cụ thể trong tài liệu, không chỉ theo danh mục tổng quát.
-> 2. **Dùng `EMBEDDING_PROVIDER=local`** ngay từ đầu cho benchmark thật — mock embedder cho kết quả sai lệch đáng kể với dữ liệu tiếng Việt.
-> 3. **Tăng số tài liệu lên 10+** với nhiều chủ đề câu hỏi cụ thể hơn (ví dụ: chính sách hoàn tiền cho COD, điều kiện trả góp) để 5 câu benchmark có độ khó và đa dạng cao hơn.
+### Kết quả chung
+
+### Phương pháp chấm
+
+Với mỗi câu hỏi, script lấy top-3 và xác định chunk liên quan bằng `doc_id` cùng các cụm từ kiểm chứng trong gold answer. Nhóm sau đó đọc context để kiểm tra câu trả lời tóm tắt:
+
+- **2 điểm:** chunk liên quan ở top-1 và context đủ để trả lời đúng gold answer.
+- **1 điểm:** chunk liên quan chỉ ở top-2/top-3 nhưng context vẫn đủ căn cứ.
+- **0 điểm:** top-3 không chứa chunk mang thông tin cần thiết.
+
+Script hiện tái lập phần retrieval và thứ hạng; câu trả lời trong báo cáo là phần tổng hợp được nhóm kiểm tra thủ công từ đúng các chunk đã in ra. Nhóm không tuyên bố đây là output từ một LLM production.
+
+| # | Chiến lược tốt nhất | Chunk đúng trong top-3? | Nhận xét |
+|---|---------------------|--------------------------|----------|
+| 1 | Sentence | Có, top-1 | Các chunk tiếp theo bổ sung phần còn lại của danh sách |
+| 2 | Recursive | Có, top-1 | Giữ 15 ngày và 24 giờ trong cùng ngữ cảnh |
+| 3 | Cả ba | Có, top-1 | Từ khóa COD/chuyển khoản có tính phân biệt cao |
+| 4 | Sentence/Recursive | Có, top-1 | Chunk giữ trọn hành động từ chối nhận hàng |
+| 5 | Cả ba + metadata filter | Có, top-2 hoặc top-3 | Filter đúng tài liệu seller nhưng phần phạm vi vẫn gây nhiễu |
+
+Metadata filter hữu ích nhất ở Q5: `customer_role=seller` loại ba tài liệu buyer/both và chỉ tìm trong hai chính sách dành cho người bán. Đánh đổi là filter quá chặt có thể bỏ tài liệu `both`, vì vậy chỉ áp dụng khi vai trò trong câu hỏi đã rõ. Với cách chấm trên, ba chiến lược lần lượt đạt FixedSize 7/10, Sentence 8/10 và Recursive 7/10.
+
+### Failure analysis
+
+Q2 là failure case rõ nhất của SentenceChunker: chunk ghi chú chỉ chứa cụm “thời hạn gửi yêu cầu” đứng top-1, còn chunk có đáp án 15 ngày và 24 giờ đứng top-2. Nguyên nhân là lexical retrieval ưu tiên trùng từ và phần ghi chú benchmark lặp lại heading. Cách cải thiện là loại ghi chú trước ingest, chunk theo heading/section và chạy lại với embedding đa ngôn ngữ thật.
 
 ---
 
-## Tự Đánh Giá (Phần Nhóm)
+## 4. Demo & Bài học nhóm — 5 điểm
 
-| Tiêu chí | Điểm tự đánh giá |
-|----------|-------------------|
-| Lựa chọn tài liệu (Document Set Quality) | 9 / 10 |
-| Thiết kế chiến lược (Strategy Design) | 12 / 15 |
-| Chất lượng truy xuất (Retrieval Quality) | 7 / 10 |
-| Thuyết trình (Demo) | 4 / 5 |
-| **Tổng phần nhóm** | **32 / 40** |
+### Kịch bản demo
+
+1. Giới thiệu 5 tài liệu và metadata `customer_role`, `category`, `source_url`.
+2. Chạy `python3 scripts/run_group_benchmark.py` để hiển thị thứ hạng retrieval và các điểm 7/10, 8/10, 7/10.
+3. Dùng Q4 minh họa SentenceChunker giữ trọn câu trả lời.
+4. Dùng Q5 minh họa metadata filtering dành cho seller.
+5. Trình bày failure case Q2 và hướng cải thiện.
+
+### Bài học
+
+- Chunk theo câu phù hợp nhất với corpus policy hiện tại, nhưng heading/bullet ngắn vẫn có thể tạo nhiễu.
+- Recursive giữ cấu trúc tốt nhưng cần điều chỉnh kích thước cho danh sách dài.
+- Fixed-size hữu ích làm baseline nhưng overlap không loại bỏ hoàn toàn việc cắt giữa câu.
+- Metadata filter tăng precision cấp tài liệu; chunking vẫn quyết định đáp án đứng top-1 hay top-3.
+- Mock embedding chỉ phù hợp unit test. Lượt benchmark này dùng lexical hashing để tái lập offline; khi demo có đủ dependency, nhóm ưu tiên kiểm tra thêm bằng embedding đa ngôn ngữ thật.
+
+### Nếu làm lại
+
+Nhóm sẽ loại phần ghi chú trước ingest, thêm metadata `section`, thử chunker theo heading và chạy `paraphrase-multilingual-MiniLM-L12-v2` khi môi trường có `sentence-transformers`.
+
+---
+
+## Tự đánh giá
+
+| Tiêu chí | Điểm |
+|----------|------|
+| Lựa chọn tài liệu | 10 / 10 |
+| Thiết kế chiến lược | 14 / 15 |
+| Chất lượng truy xuất | 8 / 10 |
+| Demo | 5 / 5 |
+| **Tổng** | **37 / 40** |
